@@ -1,0 +1,11 @@
+[package]
+name = "networking-basic"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.137"
+thiserror = "2.0.11"
+tokio = { version = "1.43.0", features = ["full"] }
+vector2 = "0.1.5"
