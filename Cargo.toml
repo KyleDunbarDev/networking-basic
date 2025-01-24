@@ -11,9 +11,13 @@ path = "src/lib.rs"
 name = "networking_basic"
 path = "src/main.rs"
 
+[[bin]]
+name = "client"
+path = "src/bin/client.rs"
+
 [dependencies]
+clap = { version = "4.0", features = ["derive"] }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.137"
 thiserror = "2.0.11"
 tokio = { version = "1.43.0", features = ["full"] }
-vector2 = "0.1.5"

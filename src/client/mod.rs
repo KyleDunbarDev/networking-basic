@@ -1,4 +1,3 @@
 mod game;
-mod network;
 
-pub use network::*;
+pub use game::GameClient;

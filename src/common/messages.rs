@@ -1,7 +1,21 @@
 use super::types::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::mpsc::Sender;
 
+// Internal message type that includes non-serializable variants
+pub enum InternalMessage {
+    NewConnection {
+        player_id: String,
+        sender: Sender<Vec<u8>>,
+    },
+    ClientMessage {
+        player_id: String,
+        message: ClientMessage,
+    },
+}
+
+// Network message type that can be serialized
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ClientMessage {
     Join,

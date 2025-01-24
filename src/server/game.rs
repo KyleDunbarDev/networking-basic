@@ -1,6 +1,6 @@
 use crate::common::{
-    ClientMessage, GameError, GameStateUpdate, PlayerState, Result, ServerMessage, Timestamp,
-    Vector2,
+    ClientMessage, GameError, GameStateUpdate, InternalMessage, PlayerState, Result, ServerMessage,
+    Timestamp, Vector2,
 };
 use std::{
     collections::{HashMap, VecDeque},
@@ -202,8 +202,8 @@ pub struct GameServer {
     game_state: GameState,
     players: HashMap<String, Player>,
     tick_rate: Duration,
-    input_receiver: Receiver<(String, ClientMessage)>,
-    input_sender: Sender<(String, ClientMessage)>,
+    input_receiver: Receiver<InternalMessage>,
+    input_sender: Sender<InternalMessage>,
     address: String,
 }
 
@@ -221,12 +221,26 @@ impl GameServer {
         })
     }
 
+    pub fn add_connection(&mut self, player_id: String, sender: Sender<Vec<u8>>) {
+        let player = Player {
+            sender,
+            input_queue: VecDeque::new(),
+            state: PlayerState {
+                position: Vector2::default(),
+                velocity: Vector2::default(),
+                last_update: Timestamp::now(),
+            },
+        };
+        self.players.insert(player_id, player);
+    }
+
     pub fn run(&mut self) -> Result<()> {
         println!("Game server starting on {}", self.address);
 
         let input_sender = self.input_sender.clone();
         let address = self.address.clone();
 
+        // Spawn network handling thread
         std::thread::spawn(move || {
             if let Err(e) = super::network::handle_connections(&address, input_sender) {
                 eprintln!("Network error: {}", e);
@@ -245,7 +259,7 @@ impl GameServer {
             let delta_time = now.duration_since(&last_tick);
 
             if delta_time >= self.tick_rate {
-                self.process_inputs()?;
+                self.process_messages()?;
                 self.update_game_state(delta_time)?;
                 self.broadcast_state(current_tick)?;
 
@@ -257,27 +271,39 @@ impl GameServer {
         }
     }
 
-    fn process_inputs(&mut self) -> Result<()> {
-        while let Ok((player_id, message)) = self.input_receiver.try_recv() {
-            self.handle_input(&player_id, message)?;
+    fn process_messages(&mut self) -> Result<()> {
+        while let Ok(message) = self.input_receiver.try_recv() {
+            match message {
+                InternalMessage::NewConnection { player_id, sender } => {
+                    let player = Player {
+                        sender,
+                        input_queue: VecDeque::new(),
+                        state: PlayerState {
+                            position: Vector2::default(),
+                            velocity: Vector2::default(),
+                            last_update: Timestamp::now(),
+                        },
+                    };
+                    self.players.insert(player_id, player);
+                }
+                InternalMessage::ClientMessage { player_id, message } => {
+                    self.handle_client_message(&player_id, message)?;
+                }
+            }
         }
         Ok(())
     }
 
-    fn update_game_state(&mut self, delta_time: Duration) -> Result<()> {
-        self.game_state.update(delta_time)
-    }
-
-    fn handle_input(&mut self, player_id: &str, message: ClientMessage) -> Result<()> {
+    fn handle_client_message(&mut self, player_id: &str, message: ClientMessage) -> Result<()> {
         match message {
+            ClientMessage::Join => {
+                self.handle_player_join(player_id)?;
+            }
             ClientMessage::Move { direction } => {
                 if let Some(player) = self.game_state.players.get_mut(player_id) {
                     player.velocity = direction;
                     player.last_update = Timestamp::now();
                 }
-            }
-            ClientMessage::Join => {
-                self.handle_player_join(player_id)?;
             }
             ClientMessage::Disconnect => {
                 self.remove_player(player_id)?;
@@ -287,17 +313,21 @@ impl GameServer {
     }
 
     fn handle_player_join(&mut self, player_id: &str) -> Result<()> {
+        println!("Player {} joining", player_id);
+
+        // Create the player state
         let player_state = PlayerState {
             position: Vector2::default(),
             velocity: Vector2::default(),
             last_update: Timestamp::now(),
         };
 
+        // Add to game state
         self.game_state
             .players
             .insert(player_id.to_string(), player_state);
 
-        // Send join confirmation
+        // Send join confirmation if we have their sender
         if let Some(player) = self.players.get(player_id) {
             let join_message = ServerMessage::JoinAccepted {
                 player_id: player_id.to_string(),
@@ -306,12 +336,14 @@ impl GameServer {
             player
                 .sender
                 .send(format!("{}\n", json).into_bytes())
-                .map_err(|_| {
-                    GameError::NetworkError("Failed to send join confirmation".to_string())
-                })?;
+                .map_err(|_| GameError::NetworkError("Failed to send join confirmation".into()))?;
         }
 
         Ok(())
+    }
+
+    fn update_game_state(&mut self, delta_time: Duration) -> Result<()> {
+        self.game_state.update(delta_time)
     }
 
     fn broadcast_state(&mut self, tick: u64) -> Result<()> {
