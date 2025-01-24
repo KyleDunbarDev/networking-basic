@@ -111,7 +111,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "networking-basic"
+name = "networking_basic"
 version = "0.1.0"
 dependencies = [
  "serde",
