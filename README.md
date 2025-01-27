@@ -1,4 +1,4 @@
-#### A basic networking template for video game servers written in Rust.<br/>
+# A basic networking template for video game servers written in Rust.<br/>
 Clients can be written in any language. Free for use in your projects. 
 
 # Developer documentation
