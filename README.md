@@ -7,7 +7,7 @@ Following is the UML and design documentation for the development of MPFree. If 
 ---
 title: Dependency Model
 ---
-classDiagram
+graph TD;
 
   Server/Network --> Common/Messages
   Server/Network --> Common/Errors
