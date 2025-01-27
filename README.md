@@ -1,14 +1,9 @@
-# A basic networking template for video game servers written in Rust.<br/>
-Clients can be written in any language. Free for use in your projects. 
+# Networking template for video game servers written in Rust.<br/>
+Clients can be written in any language. Free for use in your projects.<br/>
+This is not a swiss army knife, but a chassis for you to build upon.
 
-# Developer documentation
-Below is documentation to help you use and understand this networking starter piece. <br/>
-This is not a swiss army knife, but a chassis for you to build upon.<br/><br/>
-Client (client/game & bin/client) is an example for a game and can be fully swapped out for any executable of your choosing. <br/><br/>
-For client - server interoperability, send serialised messages to the server that be can deserialised into ClientMessage types.
-Serlialisation in the server is in JSON but this can be swapped easily for serailisation of your choice.
 
-# Features
+## Features
 #### Core Architecture
 
 - Server-client model using TCP
@@ -72,8 +67,14 @@ Server → Client:
 - Error recovery and reconnection
 - Network latency compensation
 
+# Developer documentation
+Below is documentation to help you use and understand this networking starter piece. <br/>
+<br/>
+Client (client/game & bin/client) is an example for a game and can be fully swapped out for any executable of your choosing. <br/><br/>
+For client - server interoperability, send serialised messages to the server that be can deserialised into ClientMessage types.
+Serlialisation in the server is in JSON but this can be swapped easily for serialisation of your choice.
 
-# Stability
+## Stability
 
 To suit your needs, components are grouped foremost with Single Responsibility Principle for ease of change.
 
