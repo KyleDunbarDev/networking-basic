@@ -1,5 +1,7 @@
 # Developer documentation
-Following is the UML and design documentation for the development of MPFree. If you wish to contribute, please start here
+Below is documentation to help you use and understand this networking starter piece. This is not a swiss army knife, but a chassis for you to build upon.
+Client can be fully swapped out for any executable of your choosing. For client - server interoperability, send serialised messages to the server that be can deserialised into ClientMessage types.
+Serlialisation in the server is in JSON but this can be swapped easily for serailisation of your choice.
 
 # Stability
 
