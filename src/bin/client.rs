@@ -3,7 +3,6 @@ use networking_basic::{
     client::GameClient,
     common::{ClientMessage, Result, Vector2},
     logging,
-    server::GameServer,
 };
 use std::{thread, time::Duration};
 use tracing::{debug, info, warn};
