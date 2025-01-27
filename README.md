@@ -72,6 +72,8 @@ Server → Client:
 
 # Stability
 
+To suit your needs, components are grouped foremost with Single Responsibility Principle for ease of change.
+
 ```mermaid
 ---
 title: Dependency Model
