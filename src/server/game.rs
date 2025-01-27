@@ -379,3 +379,117 @@ impl GameServer {
         Ok(())
     }
 }
+
+// ----------- TESTS ---------
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn test_game_state_update() {
+        let mut state = GameState::new();
+        let player_id = "test_player".to_string();
+        let initial_state = PlayerState {
+            position: Vector2 { x: 0.0, y: 0.0 },
+            velocity: Vector2 { x: 1.0, y: 0.0 },
+            last_update: Timestamp::now(),
+        };
+
+        // Add player
+        state.add_player(player_id.clone(), initial_state);
+        assert_eq!(state.get_player_count(), 1);
+
+        // Update game state
+        let delta = Duration::from_millis(100); // 100ms
+        state.update(delta).expect("Update failed");
+
+        // Check position updated according to velocity
+        if let Some(updated_state) = state.get_player_state(&player_id) {
+            assert!(
+                updated_state.position.x > 0.0,
+                "Player should have moved right"
+            );
+            assert_eq!(
+                updated_state.position.y, 0.0,
+                "Player should not have moved vertically"
+            );
+        } else {
+            panic!("Player state not found");
+        }
+    }
+
+    #[test]
+    fn test_collision_detection() {
+        let mut state = GameState::new();
+        let rules = GameRules::default();
+
+        // Add two players close to each other
+        let player1 = PlayerState {
+            position: Vector2 { x: 0.0, y: 0.0 },
+            velocity: Vector2 { x: 1.0, y: 0.0 },
+            last_update: Timestamp::now(),
+        };
+        let player2 = PlayerState {
+            position: Vector2 {
+                x: rules.collision_radius - 1.0,
+                y: 0.0,
+            },
+            velocity: Vector2 { x: -1.0, y: 0.0 },
+            last_update: Timestamp::now(),
+        };
+
+        state.add_player("player1".to_string(), player1);
+        state.add_player("player2".to_string(), player2);
+
+        // Update should trigger collision resolution
+        state
+            .update(Duration::from_millis(16))
+            .expect("Update failed");
+
+        // Check that players were pushed apart
+        let p1_state = state
+            .get_player_state("player1")
+            .expect("Player1 not found");
+        let p2_state = state
+            .get_player_state("player2")
+            .expect("Player2 not found");
+
+        let distance = ((p1_state.position.x - p2_state.position.x).powi(2)
+            + (p1_state.position.y - p2_state.position.y).powi(2))
+        .sqrt();
+
+        assert!(
+            distance >= rules.collision_radius,
+            "Players should be pushed apart to at least collision radius"
+        );
+    }
+
+    #[test]
+    fn test_bounds_checking() {
+        let mut state = GameState::new();
+        let rules = GameRules::default();
+
+        // Add player at edge of map with velocity pointing outward
+        let player_state = PlayerState {
+            position: Vector2 {
+                x: rules.map_bounds.1,
+                y: 0.0,
+            },
+            velocity: Vector2 { x: 10.0, y: 0.0 },
+            last_update: Timestamp::now(),
+        };
+
+        state.add_player("player1".to_string(), player_state);
+        state
+            .update(Duration::from_millis(16))
+            .expect("Update failed");
+
+        // Check that player position is clamped to map bounds
+        let updated_state = state.get_player_state("player1").expect("Player not found");
+        assert!(
+            updated_state.position.x <= rules.map_bounds.1,
+            "Player should not move beyond map bounds"
+        );
+    }
+}

@@ -169,6 +169,52 @@ impl GameClient {
             .map_err(|_| GameError::NetworkError("Failed to send disconnect message".into()))?;
         Ok(())
     }
+
+    pub fn debug_info(&self) -> String {
+        let mut info = String::new();
+
+        // Connection status
+        info.push_str(&format!(
+            "Connection: {}\n",
+            if self.player_id.is_some() {
+                "Connected"
+            } else {
+                "Disconnected"
+            }
+        ));
+
+        // Player info
+        if let Some(player_id) = &self.player_id {
+            info.push_str(&format!("Player ID: {}\n", player_id));
+
+            if let Some(state) = self.get_own_state() {
+                info.push_str(&format!(
+                    "Position: ({:.2}, {:.2})\n",
+                    state.position.x, state.position.y
+                ));
+                info.push_str(&format!(
+                    "Velocity: ({:.2}, {:.2})\n",
+                    state.velocity.x, state.velocity.y
+                ));
+            }
+        }
+
+        // Other players
+        if let Some(state) = &self.current_state {
+            info.push_str(&format!("Other players: {}\n", state.len() - 1));
+
+            for (id, player) in state {
+                if Some(id) != self.player_id.as_ref() {
+                    info.push_str(&format!(
+                        "  {} at ({:.2}, {:.2})\n",
+                        id, player.position.x, player.position.y
+                    ));
+                }
+            }
+        }
+
+        info
+    }
 }
 
 // Example usage

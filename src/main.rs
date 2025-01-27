@@ -13,4 +13,4 @@ fn main() -> Result<()> {
 // cargo run --bin client -- --client-id 0
 
 // # Terminal 3
-// cargo run --bin client -- --client-id
+// cargo run --bin client -- --client-id 1 --debug
