@@ -31,7 +31,6 @@ graph TD;
   bin/Client --> Common/Errors
   bin/Client --> Common/Types
   bin/Client --> lib
-  bin/Client --> Server/Game
   
 
 ```
