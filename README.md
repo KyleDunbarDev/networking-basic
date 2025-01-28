@@ -262,7 +262,7 @@ pub struct Vector2 {
     pub y: f32,
 }
 ```
-Represents 2D vector for position and movement. Serializable.
+Represents 2D vector for position and movement. Serialisable.
 
 ### PlayerState
 ```rust
